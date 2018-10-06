@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2015
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanningAi", "PlanningAi\PlanningAi.csproj", "{DEA1CA15-5FF6-482E-A101-DB6EDC3A9787}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanningAI.Tests", "PlanningAI.Tests\PlanningAI.Tests.csproj", "{73FD95EE-5F85-4AB0-B2AA-181614DAEB14}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DEA1CA15-5FF6-482E-A101-DB6EDC3A9787}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEA1CA15-5FF6-482E-A101-DB6EDC3A9787}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEA1CA15-5FF6-482E-A101-DB6EDC3A9787}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEA1CA15-5FF6-482E-A101-DB6EDC3A9787}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73FD95EE-5F85-4AB0-B2AA-181614DAEB14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73FD95EE-5F85-4AB0-B2AA-181614DAEB14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73FD95EE-5F85-4AB0-B2AA-181614DAEB14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73FD95EE-5F85-4AB0-B2AA-181614DAEB14}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {021C2A76-4DCC-4228-8992-76A3417C7389}
+	EndGlobalSection
+EndGlobal
