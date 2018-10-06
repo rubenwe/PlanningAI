@@ -1,5 +1,5 @@
 # PlanningAI
-__G__oal __O__riented __A__ction __P__lanning C#/.NET Library
+**G**oal **O**riented **A**ction **P**lanning C#/.NET Library
 
 This library provides a basic implementation of GOAP with
 a bit of a utility system thrown on top.
@@ -40,9 +40,11 @@ var goalState = DomainState.Empty
     .Set("isHungry", false);
 ```
 
+The `DomainState` objects are immutable but use a fluent API for easy composition.
+
 ### Actions
 Next, we need a definition of what the available actions for an agent are.
-You can implement your own actions based on `IDomainAction` or use on of the
+You can implement your own actions based on `IDomainAction` or use one of the
 provided base classes.
 
 Actions define their preconditions and effects:
@@ -108,4 +110,5 @@ if(result.Success)
 Description coming soon.
 
 ## Dependencies
-The implementation of the `DomainState` currently depends on `System.Collections.Immutable`.
+The current implementation of `DomainState`depends on `System.Collections.Immutable.ImmutableDictionary<,>`.
+I'd like to drop this dependency further down the line for easier deployment and better performance.
