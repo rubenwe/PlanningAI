@@ -1,11 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <LangVersion>7.2</LangVersion>
+    
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <Authors>rubenwe</Authors>
-    <Version>0.2.0</Version>
+    <LangVersion>7.2</LangVersion>
+
+    <!-- Package Settings -->
     <PackageId>PlanningAI</PackageId>
-    <Description>Provides an implementation of GOAP and base classes for Agents.</Description>
+    
+    <Authors>rubenwe</Authors>
+    <Description>A basic implementation of Goal Oriented Action Planning</Description>
+    <Copyright>Copyright (c) 2018 Ruben W.</Copyright>
+    
+    <RepositoryUrl>https://github.com/rubenwe/PlanningAI</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    
+    <PackageLicenseUrl>https://github.com/rubenwe/PlanningAI/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/rubenwe/PlanningAI</PackageProjectUrl>    
+    <PackageIconUrl>https://github.com/rubenwe/PlanningAI/raw/master/planningai_logo_small.png</PackageIconUrl>
+    <PackageTags>AI;GOAP;Planner</PackageTags>
+        
+    <Version>0.9.0</Version>
+
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />

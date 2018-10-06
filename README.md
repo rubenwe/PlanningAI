@@ -1,14 +1,10 @@
 # PlanningAI
-**G**oal **O**riented **A**ction **P**lanning C#/.NET Library
+**G**oal **O**riented **A**ction **P**lanning C#/.NET Library 
 
-This library provides a basic implementation of GOAP with
+This library provides a basic implementation of GOAP with 
 a bit of a utility system thrown on top.
 
-There are (a lot of) other implementations of GOAP out there.
-This implementation provides a regressive planner, 
-which I personally haven't found in other .NET based solutions.
-
-Let me know if you find one - I would love to take a look.
+[![nuget_version_badge](https://img.shields.io/nuget/v/PlanningAI.png)](https://www.nuget.org/packages/PlanningAI)
 
 ## Basics
 Goal oriented action planning enables _agents_ to plan a _sequence of actions_ 
@@ -106,9 +102,135 @@ if(result.Success)
 
 ```
 
-### Agents
+#### Debugging the planning
 Description coming soon.
+
+### Goals
+As mentioned before: If you only need planning, you don't need to define goals.
+
+Goals are a way to determine what actions the planner of an agent should search for.
+They allow to inject state into the world when they are activated and they determine
+the goal state that must be reached to fulfill them.
+
+```csharp
+class FindFoodGoal : AgentGoalBase
+{
+    public override string GoalName => nameof(FindFoodGoal);
+    public override void OnActivation(ref DomainState currentState, ref DomainState goalState)
+    {
+        currentState = currentState.Set("isHungry", true);
+        goalState = DomainState.Empty.Set("isHungry", false);
+    }
+}
+```
+
+In this example we determine that the agent is now hungry and that this goal
+will be satisfied if this is no longer the case.
+
+### Executable Actions
+Before taking a closer look at agents, we need to "beef up" one of our
+previous actions to show how an action can interact with the agent.
+
+```csharp
+public interface ICanEat
+{
+    void Eat();
+}
+
+public class OrderFoodAction : AsyncExecutableActionBase
+{
+    public override string ActionName => "Order Food";
+    private readonly ICanEat _eater;
+    
+    public OrderFoodAction(ICanEat eater) 
+    {
+        _eater = eater;
+        
+        Preconditions.Add("isAt", "Tavern");
+        Preconditions.Add("hasMoney", true);
+        Effects.Add("hasMoney", false);
+        Effects.Add("hasFood", true);
+    }
+    
+    public override Task<bool> ExecuteAsync(DomainState currentState, CancellationToken token)
+    {
+        _eater.Eat();
+        return Task.FromResult(true);
+    }
+}
+```
+
+Instead of just using `DomainActionBase` as base type we choose an `AsyncExecutableActionBase`.
+This allows us to define the code that will be run once the agent executes the action.
+
+### Agents
+
+A simple way to implement an agent is to inherit from the `Agent` class.
+In the following example we have an Agent with ever increasing hunger -
+I'm sure you can relate.
+
+The agent has two goals. It can either idle or find food.
+The winning goal is determined by evaluating `Consideration`s attached
+to the goals.
+
+```csharp
+internal class HungryAgent : Agent, ICanEat
+{
+    private float _hungerLevel;
+    public void Eat() => _hungerLevel = 0;
+
+    public void OnTick()
+    {
+        _hungerLevel = Math.Min(1, _hungerLevel + 0.01f);
+    }
+
+    public HungryAgent(IPlanner planner) : base(planner)
+    {
+        var justIdle = Consideration.FromFunc(() => 0.5f, "Idle");
+        var idleGoal = AddGoal<IdleGoal>(1, justIdle);
+        AddAction(new IdleAction(TimeSpan.FromSeconds(5)));
+
+        var isHungry = Consideration.FromFunc(() => _hungerLevel, "Hunger");
+        var foodGoal = AddGoal<FindFoodGoal>(1, isHungry);
+        AddAction(new OrderFoodAction(this));
+    }
+}
+```
+
+As long as the hunger level is low the agent will idle - 
+but as soon as the hunger grows too big, it will order something to eat.
+
+#### Agent / Action interaction
+How you want to wire up the interactions between the agents and the actions is up to you.
+In this example we used an interface and constructor injection. This allows you to unit test actions.
+Other alternatives can include callbacks / events or overwriting the `Agent` classes `virtual` 
+methods that are provied for these scenarios.
+
+### Binding actions to goals
+One of the limiting factors of GOAP is the amount of actions that need to be evaluated.
+For this reason and to allow certain actions not to be planned for certain goals
+you can bind actions to goals.
+
+```csharp
+// Instead of:
+AddAction(new OrderFoodAction(this));
+
+// We can create a bindable action and bind it to the goal
+var orderFood = AddBindableAction(new OrderFoodAction(this));
+orderFood.BindTo(foodGoal);
+```
 
 ## Dependencies
 The current implementation of `DomainState`depends on `System.Collections.Immutable.ImmutableDictionary<,>`.
 I'd like to drop this dependency further down the line for easier deployment and better performance.
+
+## Why use this implementation?
+There are (a lot of) other implementations of GOAP out there.
+Many of them will offer more features and better integration for certain use cases.
+This implementation provides a regressive planner, which I personally haven't found 
+in other .NET based solutions. 
+If you want or need to explore deep and wide, searching from the goal state
+can give a significant performance advantage.
+
+Send me a message if you know of other implementations that do it this way -
+I would love to take a look :)
