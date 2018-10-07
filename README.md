@@ -19,7 +19,7 @@ line with the desired goal state.
 ## Usage
 You can use the system including the agents or just the planning on its own.
 
-The following examples are based show an easy scenario in which 
+The following examples show a basic scenario in which 
 we want an agent to find a way to fill their belly.
 
 ### State
