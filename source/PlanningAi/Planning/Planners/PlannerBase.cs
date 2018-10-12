@@ -72,6 +72,8 @@ namespace PlanningAi.Planning.Planners
 
         protected static Actions GetActionsInverted(IPlanNode node)
         {
+            if (node is null) return null;
+            
             var stack = new Stack<IPlanNode>();
             var current = node;
             while (current != null)
@@ -88,6 +90,8 @@ namespace PlanningAi.Planning.Planners
 
         protected static Actions GetActions(IPlanNode node)
         {
+            if (node is null) return null;
+            
             var queue = new Queue<IPlanNode>();
             var current = node;
             while (current != null)

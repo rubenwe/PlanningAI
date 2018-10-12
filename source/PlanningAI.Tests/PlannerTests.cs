@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Linq;
 using PlanningAi.Planning;
 using PlanningAi.Planning.Actions;
 using PlanningAi.Planning.Planners;
@@ -13,6 +12,20 @@ namespace PlanningAI.Tests
     {
         private const int BenchmarkIterations = 1000;
 
+        [Fact]
+        public void FailedPlanningShouldReturnNullPlan()
+        {
+            var start = DomainState.Empty;
+            var target = DomainState.Empty.Set("test", 123);
+            var actions = new ActionSet(Enumerable.Empty<IDomainAction>());
+
+            var planner = PlannerFactory.CreatePlanner();
+            var result = planner.GetPlan(start, target, actions);
+
+            Assert.False(result.Success);
+            Assert.Null(result.Plan);
+        }
+        
         [Fact]
         public void PlanningShouldFindWayToReachTargetValue()
         {
