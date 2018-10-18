@@ -10,7 +10,7 @@ namespace PlanningAI.Tests
 {
     public class PlannerTests
     {
-        private const int BenchmarkIterations = 1000;
+        private const int BenchmarkIterations = 1;
 
         [Fact]
         public void FailedPlanningShouldReturnNullPlan()
@@ -58,10 +58,10 @@ namespace PlanningAI.Tests
             var planner = PlannerFactory.CreatePlanner(new PlannerSettings {PlannerType = PlannerType.Regressive});
 
             // WarmUp
-            for (var i = 0; i < 10; i++)
-            {
-                var _ = planner.GetPlan(start, goal, actions);
-            }
+//            for (var i = 0; i < 10; i++)
+//            {
+//                var _ = planner.GetPlan(start, goal, actions);
+//            }
 
             PlanningResult result = null;
             var sw = Stopwatch.StartNew();

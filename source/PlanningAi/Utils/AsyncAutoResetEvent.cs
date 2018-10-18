@@ -9,12 +9,20 @@ namespace PlanningAi.Utils
         private readonly object _syncRoot = new object();
         private readonly Queue<TaskCompletionSource<bool>> _taskQueue = new Queue<TaskCompletionSource<bool>>();
         
-        public async Task WaitAsync(CancellationToken token)
+        public async Task WaitAsync(CancellationToken token = default)
         {
             if (token.IsCancellationRequested) return;
             
             var source = new TaskCompletionSource<bool>();
-            token.Register(() => source.SetCanceled());
+            if (token.CanBeCanceled)
+            {
+                token.Register(() =>
+                {
+                    if (source.Task.IsCompleted) return;
+                    source.SetCanceled();
+                });
+            }
+            
             lock (_syncRoot)
             {
                 _taskQueue.Enqueue(source);
@@ -28,8 +36,7 @@ namespace PlanningAi.Utils
             TaskCompletionSource<bool> source;
             while ((source = GetNextQueueEntry()) != null)
             {
-                var task = source.Task;
-                if (task.IsCanceled || task.IsCompleted) continue;
+                if (source.Task.IsCompleted) continue;
                 
                 source.SetResult(true);
                 return;
