@@ -17,7 +17,7 @@ namespace PlanningAI.Tests
             
             evt.Set();
             
-            Assert.True(task1.IsCompletedSuccessfully);
+            Assert.True(task1.IsCompletedSuccessfully());
             Assert.False(task2.IsCompleted);
         }
 
@@ -34,7 +34,7 @@ namespace PlanningAI.Tests
             evt.Set();
             
             Assert.True(task1.IsCanceled);
-            Assert.True(task2.IsCompletedSuccessfully);
+            Assert.True(task2.IsCompletedSuccessfully());
         }
         
         [Fact]

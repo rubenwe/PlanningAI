@@ -10,10 +10,17 @@ namespace PlanningAi.Utils
     [PublicAPI]
     public class ResourcePool<T>  
     {
-        private readonly Rentable[] _rentables;
-        private readonly object _syncRoot = new object();
+        private static readonly Rentable[] EmptyArray = new Rentable[0];
         private readonly AsyncAutoResetEvent _lock = new AsyncAutoResetEvent();
+        private Rentable[] _rentables;
 
+        public int ItemCount { get { lock (_lock) return _rentables.Length; } }
+
+        public ResourcePool()
+        {
+            _rentables = EmptyArray;
+        }
+        
         public ResourcePool(IEnumerable<T> items)
         {
             _rentables = items
@@ -52,25 +59,66 @@ namespace PlanningAi.Utils
             return await WaitForMatchingItem(canRent, getCost, token);
         }
 
+        public void Return(T item)
+        {
+            lock (_lock)
+            {
+                for (var i = 0; i < _rentables.Length; i++)
+                {
+                    ref var rentable = ref _rentables[i];
+                    if (!ReferenceEquals(rentable.Item, item)) continue;
+
+                    rentable.IsFree = true;
+                    break;
+                }
+            }
+            
+            _lock.Set();
+        }
+
+        public void Add(T item)
+        {
+            lock (_lock)
+            {
+                var oldRentables = _rentables;
+                _rentables = new Rentable[_rentables.Length + 1];
+                
+                Array.Copy(oldRentables, _rentables, oldRentables.Length);
+                
+                _rentables[oldRentables.Length] = new Rentable(item);
+            }
+        }
+        
+        public void AddRange(IReadOnlyList<T> items)
+        {
+            lock (_lock)
+            {
+                var oldRentables = _rentables;
+                _rentables = new Rentable[_rentables.Length + items.Count];
+                
+                Array.Copy(oldRentables, _rentables, oldRentables.Length);
+                
+                for (var i = 0; i < items.Count; i++)
+                {
+                    _rentables[oldRentables.Length + i] = new Rentable(items[i]);
+                }
+            }
+        }
+        
         private bool AlwaysTrue(T arg) => true;
 
         private bool TryRent(Func<T, bool> canRent, Func<T, float> getCost, out T rented)
         {
-            bool IsCandidate(ref Rentable rentable)
-            {
-                return rentable.IsFree && canRent(rentable.Item);
-            }
-
             rented = default;
             
-            lock (_syncRoot)
+            lock (_lock)
             {
                 if (getCost == null)
                 {
                     for (var i = 0; i < _rentables.Length; i++)
                     {
                         ref var rentable = ref _rentables[i];
-                        if (!IsCandidate(ref rentable)) continue;
+                        if (!rentable.IsFree || !canRent(rentable.Item)) continue;
 
                         return Rent(out rented, ref rentable);
                     }
@@ -82,7 +130,7 @@ namespace PlanningAi.Utils
                     for (var i = 0; i < _rentables.Length; i++)
                     {
                         ref var rentable = ref _rentables[i];
-                        if (!IsCandidate(ref rentable)) continue;
+                        if (!rentable.IsFree || !canRent(rentable.Item)) continue;
                         
                         var cost = getCost(rentable.Item);
                         if (cost > minCost) continue;
@@ -125,23 +173,6 @@ namespace PlanningAi.Utils
             }
 
             return default;
-        }
-
-        public void Return(T item)
-        {
-            lock (_syncRoot)
-            {
-                for (var i = 0; i < _rentables.Length; i++)
-                {
-                    ref var rentable = ref _rentables[i];
-                    if (!ReferenceEquals(rentable.Item, item)) continue;
-
-                    rentable.IsFree = true;
-                    break;
-                }
-            }
-            
-            _lock.Set();
         }
         
         private struct Rentable

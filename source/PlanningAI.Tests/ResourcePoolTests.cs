@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Newtonsoft.Json.Serialization;
 using PlanningAi.Planning;
 using PlanningAi.Planning.Actions;
 using PlanningAi.Planning.Planners;
@@ -64,7 +65,7 @@ namespace PlanningAI.Tests
             var cookB = new Cook();
             var pool = new ResourcePool<Cook>(new []{cookA, cookB });
 
-            var cheaperCook = await pool.RentAsync(c => c == cookA ? 5 : 3);
+            var cheaperCook = await pool.RentAsync(null, c => c == cookA ? 5 : 3);
             
             Assert.Equal(cookB, cheaperCook);
         }
@@ -94,6 +95,45 @@ namespace PlanningAI.Tests
 
             Assert.NotEmpty(executedActions);
             Assert.Equal("Starting: Pick Up RawPatty", executedActions.First());
+        }
+
+        [Fact]
+        public async Task AddingResourceToPoolShouldMakeItAvailable()
+        {
+            var pool = new ResourcePool<string>();
+            Assert.Equal(0, pool.ItemCount);
+
+            var expected = "test";
+            
+            pool.Add(expected);
+            Assert.Equal(1, pool.ItemCount);
+            var rented = await pool.RentAsync();
+
+            Assert.Equal(expected, rented);
+        }
+        
+        [Fact]
+        public async Task AddingMultipleResourcesToPoolShouldMakeThemAvailable()
+        {
+            var pool = new ResourcePool<string>();
+            Assert.Equal(0, pool.ItemCount);
+
+            var test1 = "test1";
+            var test2 = "test2";
+            var test3 = "test3";
+            
+            pool.Add(test1);
+            Assert.Equal(1, pool.ItemCount);
+            
+            var rented1 = await pool.RentAsync();
+            Assert.Equal(test1, rented1);            
+
+            pool.AddRange(new[]{test2, test3});
+            var rented2 = await pool.RentAsync();
+            Assert.Equal(test2, rented2);
+            
+            var rented3 = await pool.RentAsync();
+            Assert.Equal(test3, rented3);
         }
 
         private static ResourcePool<Cook> CreateResourcePool()

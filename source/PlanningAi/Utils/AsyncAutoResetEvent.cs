@@ -6,12 +6,12 @@ namespace PlanningAi.Utils
 {
     public sealed class AsyncAutoResetEvent
     {
-        private readonly object _syncRoot = new object();
         private readonly Queue<TaskCompletionSource<bool>> _taskQueue = new Queue<TaskCompletionSource<bool>>();
+        private readonly Task _completed = Task.CompletedTask;
         
-        public async Task WaitAsync(CancellationToken token = default)
+        public Task WaitAsync(CancellationToken token = default)
         {
-            if (token.IsCancellationRequested) return;
+            if (token.IsCancellationRequested) return _completed;
             
             var source = new TaskCompletionSource<bool>();
             if (token.CanBeCanceled)
@@ -23,12 +23,12 @@ namespace PlanningAi.Utils
                 });
             }
             
-            lock (_syncRoot)
+            lock (_taskQueue)
             {
                 _taskQueue.Enqueue(source);
             }
 
-            await source.Task;
+            return source.Task;
         }
 
         public void Set()
@@ -45,7 +45,7 @@ namespace PlanningAi.Utils
 
         private TaskCompletionSource<bool> GetNextQueueEntry()
         {
-            lock (_syncRoot)
+            lock (_taskQueue)
             {
                 return _taskQueue.Count != 0 
                     ? _taskQueue.Dequeue() 
