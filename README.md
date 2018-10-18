@@ -4,6 +4,7 @@
 This library provides a basic implementation of GOAP with 
 a bit of a utility system thrown on top.
 
+[![Build Status](https://dev.azure.com/rubenwe/PlanningAI/_apis/build/status/rubenwe.PlanningAI)](https://dev.azure.com/rubenwe/PlanningAI/_build/latest?definitionId=1)
 [![nuget_version_badge](https://img.shields.io/nuget/v/PlanningAI.png)](https://www.nuget.org/packages/PlanningAI)
 
 ## Basics
