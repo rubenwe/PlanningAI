@@ -20,46 +20,105 @@ namespace PlanningAi.Utils
                 .Select(item => new Rentable(item))
                 .ToArray();
         }
-
+        
+        public async Task<T> RentAsync(CancellationToken token = default)
+        {
+            return await RentAsync(null, null, token);
+        }
+        
         public async Task<T> RentAsync(Func<T, bool> canRent, CancellationToken token = default)
         {
-            if (token.IsCancellationRequested) return default;
-
-            if (TryRent(canRent, out var rentAsync))
-            {
-                return rentAsync;
-            }
-
-            return await WaitForMatchingItem(canRent, token);
+            return await RentAsync(canRent, null, token);
+        }
+        
+        public async Task<T> RentAsync(Func<T, float> getCost, CancellationToken token = default)
+        {
+            return await RentAsync(null, getCost, token);
         }
 
-        private bool TryRent(Func<T, bool> canRent, out T rented)
+        public async Task<T> RentAsync(
+            Func<T, bool> canRent, 
+            Func<T, float> getCost, 
+            CancellationToken token = default)
         {
+            if (token.IsCancellationRequested) return default;
+            canRent = canRent ?? AlwaysTrue;
+            
+            if (TryRent(canRent, getCost, out var rented))
+            {
+                return rented;
+            }
+
+            return await WaitForMatchingItem(canRent, getCost, token);
+        }
+
+        private bool AlwaysTrue(T arg) => true;
+
+        private bool TryRent(Func<T, bool> canRent, Func<T, float> getCost, out T rented)
+        {
+            bool IsCandidate(ref Rentable rentable)
+            {
+                return rentable.IsFree && canRent(rentable.Item);
+            }
+
+            rented = default;
+            
             lock (_syncRoot)
             {
-                rented = default;
-            
-                for (var i = 0; i < _rentables.Length; i++)
+                if (getCost == null)
                 {
-                    ref var rentable = ref _rentables[i];
-                    if (!rentable.IsFree || !canRent(rentable.Item)) continue;
+                    for (var i = 0; i < _rentables.Length; i++)
+                    {
+                        ref var rentable = ref _rentables[i];
+                        if (!IsCandidate(ref rentable)) continue;
 
-                    rentable.IsFree = false;
-                    rented = rentable.Item;
-                
-                    return true;
+                        return Rent(out rented, ref rentable);
+                    }
                 }
+                else
+                {
+                    var minCost = float.MaxValue;
+                    var minIdx = -1;
+                    for (var i = 0; i < _rentables.Length; i++)
+                    {
+                        ref var rentable = ref _rentables[i];
+                        if (!IsCandidate(ref rentable)) continue;
+                        
+                        var cost = getCost(rentable.Item);
+                        if (cost > minCost) continue;
+                        
+                        minCost = cost;
+                        minIdx = i;
+                    }
 
-                return false;
+                    if (minIdx == -1) return false;
+                    ref var result = ref _rentables[minIdx];
+                    
+                    return Rent(out rented, ref result);
+                }
+                
             }
+            
+            return false;
         }
 
-        private async Task<T> WaitForMatchingItem(Func<T, bool> canRent, CancellationToken token)
+        private bool Rent(out T rented, ref Rentable rentable)
+        {
+            rented = rentable.Item;
+            rentable.IsFree = false;
+            
+            return true;
+        }
+
+        private async Task<T> WaitForMatchingItem(
+            Func<T, bool> canRent, 
+            Func<T, float> getPriority,
+            CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
                 await _lock.WaitAsync(token);
-                if (TryRent(canRent, out var rented))
+                if (TryRent(canRent, getPriority, out var rented))
                 {
                     return rented;
                 }

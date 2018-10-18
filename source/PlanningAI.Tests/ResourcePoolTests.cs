@@ -22,7 +22,7 @@ namespace PlanningAI.Tests
             var source = new CancellationTokenSource();
 
             // Get resource to block pool
-            _ = await pool.RentAsync(c => true, source.Token);
+            _ = await pool.RentAsync(c => true,  source.Token);
             var task1 = pool.RentAsync(c => true, source.Token);
             
             await Assert.ThrowsAsync<TaskCanceledException>(async () =>
@@ -39,7 +39,7 @@ namespace PlanningAI.Tests
         {
             var pool = CreateResourcePool();
             var secondRented = false;
-            int canRentCalls = 0;
+            var canRentCalls = 0;
 
             var cook1Task = pool.RentAsync(c =>
             {
@@ -47,7 +47,7 @@ namespace PlanningAI.Tests
                 return secondRented;
             });
             
-            var cook = await pool.RentAsync(c => true);
+            var cook = await pool.RentAsync();
             secondRented = true;
             pool.Return(cook);
 
@@ -55,6 +55,18 @@ namespace PlanningAI.Tests
             
             Assert.NotNull(cook);
             Assert.Equal(2, canRentCalls);
+        }
+
+        [Fact]
+        public async Task ShouldPrioritizeResourceWithLowestPriorityValue()
+        {
+            var cookA = new Cook();
+            var cookB = new Cook();
+            var pool = new ResourcePool<Cook>(new []{cookA, cookB });
+
+            var cheaperCook = await pool.RentAsync(c => c == cookA ? 5 : 3);
+            
+            Assert.Equal(cookB, cheaperCook);
         }
 
         [Fact]
@@ -233,7 +245,7 @@ namespace PlanningAI.Tests
 
         public async Task<bool> ExecuteAsync(CancellationToken token = default)
         {
-            RentedCook = await _pool.RentAsync(CanExecute, token);
+            RentedCook = await _pool.RentAsync(CanExecute, null, token);
             if (token.IsCancellationRequested) return false;
             
             Started?.Invoke();
