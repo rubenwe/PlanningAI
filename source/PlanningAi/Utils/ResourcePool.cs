@@ -95,22 +95,26 @@ namespace PlanningAi.Utils
         
         public void Return(object owner, T item)
         {
+            var returned = false;
             lock (_lock)
             {
                 for (var i = 0; i < _rentables.Length; i++)
                 {
                     ref var rentable = ref _rentables[i];
-                    if (!ReferenceEquals(rentable.Item, item)) continue;
+                    if (!Equals(rentable.Item, item)) continue;
 
                     if (rentable.IsFree) ThrowHelper.ResourceNotRented(rentable.Item);
-                    if (!ReferenceEquals(rentable.Owner, owner)) ThrowHelper.WrongOwner(rentable, owner);
+                    if (!Equals(rentable.Owner, owner)) ThrowHelper.WrongOwner(rentable, owner);
                     
                     rentable.IsFree = true;
                     rentable.Owner = null;
+                    returned = true;
                     
                     break;
                 }
             }
+
+            if (!returned) ThrowHelper.ResourceNotInPool(item);
             
             _lock.Set();
         }
@@ -123,7 +127,7 @@ namespace PlanningAi.Utils
                 for (var i = 0; i < _rentables.Length; i++)
                 {
                     ref var rentable = ref _rentables[i];
-                    if (rentable.IsFree || !ReferenceEquals(rentable.Owner, owner)) continue;
+                    if (rentable.IsFree || !Equals(rentable.Owner, owner)) continue;
 
                     rentable.IsFree = true;
                     rentable.Owner = null;
@@ -173,7 +177,7 @@ namespace PlanningAi.Utils
                 for (var i = 0; i < _rentables.Length; i++)
                 {
                     ref var rentable = ref _rentables[i];
-                    if (!ReferenceEquals(rentable.Item, item)) continue;
+                    if (!Equals(rentable.Item, item)) continue;
 
                     return !rentable.IsFree;
                 }
@@ -254,6 +258,8 @@ namespace PlanningAi.Utils
                 {
                     return rented;
                 }
+                
+                _lock.Set();
             }
 
             return default;
@@ -261,15 +267,20 @@ namespace PlanningAi.Utils
         
         private struct Rentable
         {
-            public bool IsFree;
+            public volatile object Owner;
+            public volatile bool IsFree;
             public readonly T Item;
-            public object Owner;
 
             public Rentable(T item)
             {
                 Item = item;
-                IsFree = true;
                 Owner = null;
+                IsFree = true;
+            }
+            
+            public override string ToString()
+            {
+                return $"{nameof(Item)}: {Item}, {nameof(IsFree)}: {IsFree}, {nameof(Owner)}: {Owner}";
             }
         }
         

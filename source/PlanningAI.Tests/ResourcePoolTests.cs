@@ -17,6 +17,34 @@ namespace PlanningAI.Tests
     public class ResourcePoolTests
     {
         [Fact]
+        public async Task ShouldSearchAllWaitingRequests()
+        {
+            var executedChecks = 0;
+            Func<int, bool> nope = i =>
+            {
+                executedChecks++;
+                return false;
+            };
+            
+            var pool = new ResourcePool<int>(1, 2, 3);
+
+            var item1 = await pool.RentAsync();
+            var task2 = pool.RentAsync(nope);
+            var task3 = pool.RentAsync(nope);
+
+            
+            var initialChecks = (pool.ItemCount - 1) * 2;
+            
+            Assert.Equal(initialChecks, executedChecks);
+           
+            executedChecks = 0;
+            pool.Return(item1);
+            
+            var checksOnReturn = pool.ItemCount * 2;
+            Assert.Equal(checksOnReturn, executedChecks);
+        }
+        
+        [Fact]
         public async Task OwnerViewShouldAllowToReturnAllOwned()
         {
             var owner1 = new object();
