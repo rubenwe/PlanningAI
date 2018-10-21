@@ -17,14 +17,85 @@ namespace PlanningAI.Tests
     public class ResourcePoolTests
     {
         [Fact]
+        public async Task OwnerViewShouldAllowToReturnAllOwned()
+        {
+            var owner1 = new object();
+            var pool = new ResourcePool<string>("1", "a", "2");
+            using (var view = pool.GetViewForOwner(owner1))
+            {
+                var item1 = await view.RentAsync(s => int.TryParse(s, out _));
+                var item2 = await view.RentAsync(s => int.TryParse(s, out _));
+                var item3 = await pool.RentAsync();
+
+                Assert.Equal("1", item1);
+                Assert.Equal("2", item2);
+                Assert.Equal("a", item3);
+
+                await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+                {
+                    var source = new CancellationTokenSource(1);
+                    await pool.RentAsync(source.Token);
+                });
+            }
+
+            var item4 = await pool.RentAsync();
+            var item5 = await pool.RentAsync();
+            
+            Assert.Equal("1", item4);
+            Assert.Equal("2", item5);
+        }
+        
+        [Fact]
+        public void CheckingIfUnknownResourceIsRentedShouldThrow()
+        {
+            var pool = new ResourcePool<object>();
+            Assert.Throws<ArgumentException>(() => pool.IsRented(new object()));
+        }
+        
+        [Fact]
+        public async Task OwnedResourceShouldBeReturnableForOwner()
+        {
+            var owner1 = new object();
+            
+            var pool = new ResourcePool<string>("a", "b");
+            var resource1 = await pool.RentAsync(owner1);
+
+            pool.Return(owner1, resource1);
+
+            Assert.False(pool.IsRented(resource1));
+        }
+        
+        [Fact]
+        public async Task ShouldNotAllowToReturnUnownedResource()
+        {
+            var owner1 = new object();
+            var owner2 = new object();
+            
+            var pool = new ResourcePool<string>("a", "b");
+            var resource1 = await pool.RentAsync(owner1);
+
+            Assert.Throws<InvalidOperationException>(() => { pool.Return(owner2, resource1); });
+        }
+
+        [Fact]
+        public async Task ShouldNotAllowToReturnFreeResource()
+        {
+            var pool = new ResourcePool<string>("a", "b");
+            var resource1 = await pool.RentAsync();
+            
+            pool.Return(resource1);
+            Assert.Throws<InvalidOperationException>(() => pool.Return(resource1));
+        }
+        
+        [Fact]
         public async Task CancelShouldFreeTasks()
         {
             var pool = CreateResourcePool();
             var source = new CancellationTokenSource();
 
             // Get resource to block pool
-            _ = await pool.RentAsync(c => true,  source.Token);
-            var task1 = pool.RentAsync(c => true, source.Token);
+            _ = await pool.RentAsync(source.Token);
+            var task1 = pool.RentAsync(source.Token);
             
             await Assert.ThrowsAsync<TaskCanceledException>(async () =>
             {
@@ -63,7 +134,7 @@ namespace PlanningAI.Tests
         {
             var cookA = new Cook();
             var cookB = new Cook();
-            var pool = new ResourcePool<Cook>(new []{cookA, cookB });
+            var pool = new ResourcePool<Cook>(cookA, cookB);
 
             var cheaperCook = await pool.RentAsync(null, c => c == cookA ? 5 : 3);
             
