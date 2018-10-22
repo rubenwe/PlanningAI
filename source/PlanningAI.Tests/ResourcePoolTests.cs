@@ -42,6 +42,9 @@ namespace PlanningAI.Tests
             
             var checksOnReturn = pool.ItemCount * 2;
             Assert.Equal(checksOnReturn, executedChecks);
+            
+            Assert.False(pool.IsRented(2));
+            Assert.False(pool.IsRented(3));
         }
         
         [Fact]

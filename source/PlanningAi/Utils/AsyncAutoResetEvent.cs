@@ -11,7 +11,10 @@ namespace PlanningAi.Utils
         
         public Task WaitAsync(CancellationToken token = default)
         {
-            if (token.IsCancellationRequested) return _completed;
+            if (token.IsCancellationRequested)
+            {
+                return _completed;
+            }
             
             var source = new TaskCompletionSource<bool>();
             if (token.CanBeCanceled)

@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace PlanningAi.Utils.Logging
 {
+    [ExcludeFromCodeCoverage]
     internal sealed class DummyLogger : ILogger
     {
         public void Debug(string message, params object[] args)

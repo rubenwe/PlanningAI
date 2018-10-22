@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -278,6 +279,7 @@ namespace PlanningAi.Utils
                 IsFree = true;
             }
             
+            [ExcludeFromCodeCoverage]
             public override string ToString()
             {
                 return $"{nameof(Item)}: {Item}, {nameof(IsFree)}: {IsFree}, {nameof(Owner)}: {Owner}";

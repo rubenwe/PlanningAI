@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using PlanningAi.Utils;
@@ -36,9 +37,36 @@ namespace PlanningAI.Tests
             Assert.True(task1.IsCanceled);
             Assert.True(task2.IsCompletedSuccessfully());
         }
+
+        [Fact]
+        public async Task WaitingOnCancelledTaskShouldReturn()
+        {
+            var evt = new AsyncAutoResetEvent();
+
+            var source = new CancellationTokenSource();
+            source.Cancel();
+
+            await evt.WaitAsync(source.Token);
+        }
+
+        [Fact]
+        public async Task CancellingCompletedTaskShouldNotThrow()
+        {
+            var evt = new AsyncAutoResetEvent();
+            
+            var source = new CancellationTokenSource();
+            var task = evt.WaitAsync(source.Token);
+            var cancelation = Task.Run(() =>
+            {
+                evt.Set();
+                source.Cancel();
+            });
+
+            await Task.WhenAll(task, cancelation);
+        }
         
         [Fact]
-        public async Task AwaitingCanceledTaskShouldThrow()
+        public async Task AwaitingTaskThatGetsCancelledShouldThrow()
         {
             var evt = new AsyncAutoResetEvent();
             

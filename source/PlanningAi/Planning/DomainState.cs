@@ -181,6 +181,7 @@ namespace PlanningAi.Planning
             return other.IsSubStateOf(this);
         }
 
+        [ExcludeFromCodeCoverage]
         public override string ToString()
         {
             return "{" + string.Join(", ", _state.Select(pair => $"({pair.Key}: {pair.Value})")) + "}";

@@ -24,6 +24,7 @@ namespace PlanningAI.Tests
 
             Assert.False(result.Success);
             Assert.Null(result.Plan);
+            Assert.Null(result.SearchTree);
         }
         
         [Fact]
@@ -55,7 +56,13 @@ namespace PlanningAI.Tests
                 .Set("isHungry", false)
                 .Set("isDrunk", true);
 
-            var planner = PlannerFactory.CreatePlanner(new PlannerSettings {PlannerType = PlannerType.Regressive});
+            var planner = PlannerFactory.CreatePlanner(
+                new PlannerSettings
+                {    
+                    EarlyExit = false,
+                    CreateDebugGraph = true,
+                    PlannerType = PlannerType.Regressive
+                });
 
             // WarmUp
 //            for (var i = 0; i < 10; i++)
@@ -75,7 +82,7 @@ namespace PlanningAI.Tests
             Assert.NotNull(result.Plan);
             Assert.NotEmpty(result.Plan);
 
-            Assert.Null(result.SearchTree);
+            Assert.NotNull(result.SearchTree);
             
             sw.Stop();
             

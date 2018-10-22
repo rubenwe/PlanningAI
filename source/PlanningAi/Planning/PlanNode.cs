@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using PlanningAi.Planning.Actions;
 
 namespace PlanningAi.Planning
@@ -25,6 +26,7 @@ namespace PlanningAi.Planning
             Level = (parent?.Level ?? -1) + 1;
         }
 
+        [ExcludeFromCodeCoverage]
         public override string ToString()
         {
             return $"{nameof(SelectedAction)}: {SelectedAction}, {nameof(RunningCost)}: {RunningCost}, {nameof(Level)}: {Level}";

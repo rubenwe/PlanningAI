@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PlanningAi.Planning;
 using Xunit;
 
@@ -137,6 +138,19 @@ namespace PlanningAI.Tests
 
             Assert.Equal(2.5f, goal.DistanceTo(current), 2);
             Assert.Equal(0.5f, goal.DistanceTo(current, true), 2);
+        }
+
+        [Fact]
+        public void ApplyingDictionaryShouldWork()
+        {
+            var state = DomainState.Empty.Apply(new Dictionary<string, object>
+            {
+                ["test123"] = 123,
+                ["test321"] = true
+            });
+            
+            Assert.Equal(123, state.GetValueOrDefault("test123", 0));
+            Assert.True(state.GetValueOrDefault("test321", false));
         }
     }
 }
