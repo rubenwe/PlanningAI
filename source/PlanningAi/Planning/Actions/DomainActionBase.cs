@@ -6,7 +6,7 @@ namespace PlanningAi.Planning.Actions
     {
         public virtual bool IsValid => true;
         protected virtual float StaticCost { get; } = 1;
-        public abstract string ActionName { get; }
+        public virtual string ActionName => GetType().Name;
 
         public Dictionary<string, object> Preconditions { get; } = new Dictionary<string, object>();
         public Dictionary<string, object> Effects { get; } = new Dictionary<string, object>();

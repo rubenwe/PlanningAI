@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using PlanningAi.Planning;
 
 namespace PlanningAi.Agents
 {
@@ -6,6 +7,6 @@ namespace PlanningAi.Agents
     public interface IConsideration
     {
         string Name { get; }
-        float GetValue();
+        float GetValue(DomainState currentState);
     }
 }

@@ -8,8 +8,7 @@ namespace PlanningAi.Agents
     public interface IAgentGoal
     {
         string GoalName { get; }
-        float Weight { get; }
-        IReadOnlyList<IConsideration> Considerations { get; }
+        float GetGoalWeight(DomainState currentState);
         void OnActivation(ref DomainState currentState, ref DomainState goalState);
     }
 }

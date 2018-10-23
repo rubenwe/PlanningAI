@@ -56,7 +56,7 @@ namespace PlanningAi.Agents
             _goals.Add(goal);
         }
 
-        public async void RunActions(CancellationToken token = default)
+        public async Task RunActionsAsync(CancellationToken token = default)
         {
             while (!token.IsCancellationRequested)
             {
@@ -162,7 +162,7 @@ namespace PlanningAi.Agents
 
         private DomainState SetNextGoal(ref DomainState state)
         {
-            var goal = FindBestRatedGoal();
+            var goal = FindBestRatedGoal(state);
 
             if (goal == null)
             {
@@ -231,7 +231,7 @@ namespace PlanningAi.Agents
             }
         }
 
-        private IAgentGoal FindBestRatedGoal()
+        private IAgentGoal FindBestRatedGoal(DomainState currentState)
         {
             _logger.Debug("Searching goal for next plan, was `{0}`.", CurrentGoal?.GoalName ?? "None");
             
@@ -240,7 +240,7 @@ namespace PlanningAi.Agents
             
             foreach (var goal in Goals)
             {
-                var goalScore = CalculateGoalScore(goal);
+                var goalScore = goal.GetGoalWeight(currentState);
                 if (!(goalScore > currentMax)) continue;
                 
                 currentMax = goalScore;
@@ -250,21 +250,7 @@ namespace PlanningAi.Agents
             return bestGoal;
         }
 
-        // ReSharper disable once LoopCanBeConvertedToQuery
-        private static float CalculateGoalScore(IAgentGoal goal)
-        {
-            var score = 1.0f;
-            foreach (var consideration in goal.Considerations)
-            {
-                score *= consideration.GetValue();
-            }
-
-            var modFactor = 1 - 1 / goal.Considerations.Count;
-            var makeUpFactor = (1 - score) * modFactor;
-            var considerationScore = score + makeUpFactor * score;
-            
-            return considerationScore * goal.Weight;
-        }
+        
         
         /// <summary>
         /// Adds an action to the agent.
