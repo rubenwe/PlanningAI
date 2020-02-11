@@ -22,17 +22,18 @@ namespace PlanningAi.Agents
         private readonly IPlanner _planner;
         private readonly ILogger _logger;
         
-        public DomainState CurrentState { get; private set; } = DomainState.Empty;
+        public DomainState CurrentState { get; private set; };
         public IAgentGoal CurrentGoal { get; private set; }
         public IDomainAction CurrentAction { get; private set; }
 
         public IReadOnlyList<IDomainAction> Actions => _actions;
         public IReadOnlyList<IAgentGoal> Goals => _goals;
 
-        public Agent(IPlanner planner, ILogger logger = null)
+        public Agent(IPlanner planner, ILogger logger = null, DomainState initialState = null)
         {
             _planner = planner ?? throw new ArgumentNullException(nameof(planner));
             _logger = logger ?? new DummyLogger();
+            CurrentState = initialState ?? DomainState.Empty;
         }
         
         /// <summary>

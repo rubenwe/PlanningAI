@@ -18,5 +18,11 @@ namespace PlanningAi.Agents
         {
             return new DelegateConsideration(name ?? "Unnamed", getValueFunc);
         }
-    }
+
+        [PublicAPI]
+        public static IConsideration FromState(string value, string name = null)
+        {
+            return new StateConsideration(name ?? "Unnamed", value);
+        }
+  }
 }
