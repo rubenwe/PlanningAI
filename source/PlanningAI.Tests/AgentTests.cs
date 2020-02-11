@@ -118,7 +118,33 @@ namespace PlanningAI.Tests
             
             Assert.Equal(goal1, agent.CurrentGoal);
         }
-    }
+
+        [Fact]
+        public async Task ShouldUseStateConsiderationToChooseBestGoal()
+        {
+            var planner = PlannerFactory.CreatePlanner();
+
+            DomainState initialState = DomainState.Empty;
+            initialState = initialState.Set("testState1", 0.2f);
+            initialState = initialState.Set("testState2", 0.5f);
+
+            var agent = new Agent(planner, null, initialState);
+      
+            var goal1 = new TestGoal { Weight = 1 };
+            var goal2 = new TestGoal { Weight = 1 };
+
+            goal1.AddConsideration(Consideration.FromState("testState1"));
+            goal2.AddConsideration(Consideration.FromState("testState2"));
+
+            agent.AddGoal(goal1);
+            agent.AddGoal(goal2);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await agent.RunActionsAsync());
+
+            Assert.Equal(goal2, agent.CurrentGoal);
+        }
+  }
 
     public abstract class GoalAction : AsyncExecutableActionBase
     {
